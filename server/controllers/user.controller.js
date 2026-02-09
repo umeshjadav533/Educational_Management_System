@@ -1,7 +1,10 @@
 import { ErrorHandler } from '../middlewares/error.js'
-import asyncHandler from '../middlewares/asyncHandler.js'
+import asyncHandler from '../utils/asyncHandler.js'
 import generateToken from '../utils/generateToken.js';
 import User from '../models/user.model.js'
+import generateForgotPasswordEmailTemplate from '../utils/emailTemplate.js';
+import sendEmail from '../services/emailService.js';
+import crypto from 'crypto';
 
 // REGISTER USER
 export const register = asyncHandler(async (req, res, next) => {
@@ -35,18 +38,78 @@ export const loginUser = asyncHandler(async (req, res, next) => {
 });
 
 export const logout = asyncHandler(async (req, res, next) => {
-    res.status(200).cookie("token", "", {
-        expires: new Date(Date.now()),
-        httpOnly: true
-    }).json({
+    res.status(200).clearCookie('token').json({
         success: true,
         message: "Logged out successfully"
     })
 });
 
-export const getUser = asyncHandler(async (req, res, next) => {});
+export const getUser = asyncHandler(async (req, res, next) => {
+    const user = req.user;
+    res.status(200).json({
+        success: true,
+        user
+    })
+});
 
-export const forgotPassword = asyncHandler(async (req, res, next) => {});
+export const forgotPassword = asyncHandler(async (req, res, next) => {
+    const user = await User.findOne({ email: req.body.email });
 
-export const resetPassword = asyncHandler(async (req, res, next) => {});
+    if(!user){
+        return next(new ErrorHandler("User not found with this email", 404));
+    }
+
+    const resetToken = user.getResetPasswordToken();
+
+    await user.save({ validationBeforeSave: false });
+
+    const resetPasswordUrl = `${process.env.FRONTED_URI}/reset-password?token=${resetToken}`;
+
+    const message =  generateForgotPasswordEmailTemplate(resetPasswordUrl);
+
+    try {
+        await sendEmail({
+            to: user.email,
+            subject: "Educaional Management System - password Reset Request",
+            message
+        });
+        res.status(200).json({
+            success: true,
+            message: `Email sent to user ${user.email} successfully`
+        })
+    } catch (error) {
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        await user.save({ validateBeforeSave: false });
+        return next(new ErrorHandler(error.message || "Cannot send email", 500));
+    }
+
+});
+
+export const resetPassword = asyncHandler(async (req, res, next) => {
+    const { token } = req.params;
+    const resetPasswordToken = crypto.createHash("sha256").update(token).digest("hex");
+    
+    const user = await User.findOne({
+        resetPasswordToken,
+        resetPasswordExpire: { $gt: Date.now() }
+    });
+    if(!user){
+        return next(new ErrorHandler("Invalid or expired password reset token", 400))
+    }
+    if(!req.body.password || !req.body.confirmPassword){
+        return next(new ErrorHandler("Please provide all required fields", 400));
+    }
+    if(req.body.password !== req.body.confirmPassword){
+        return next(new ErrorHandler("Password and confirm password do not match", 400));
+    }
+
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    
+    await user.save();
+
+    generateToken(user, 200, "Password reset successful", res);
+});
 
