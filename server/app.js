@@ -19,6 +19,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(errorMiddleware);
 
 // user routes
-app.use('/api/v1/user',userRoutes);
+app.use('/api/v1/auth',userRoutes);
 
 export default app;

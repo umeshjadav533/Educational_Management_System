@@ -1,5 +1,5 @@
 import express from "express";
-import { register, loginUser, logout, getUser, forgotPassword, resetPassword } from "../controllers/user.controller.js";
+import { register, loginUser, logout, getUser, forgotPassword, resetPassword } from "../controllers/auth.controller.js";
 import multer from 'multer';
 import isAuthenticated from "../middlewares/authMiddleware.js";
 
