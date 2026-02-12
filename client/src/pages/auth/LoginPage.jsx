@@ -14,7 +14,8 @@ const LoginPage = () => {
   });
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
-  const handleChnage = (e) => {
+  
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name] : value }));
 
@@ -107,7 +108,7 @@ const LoginPage = () => {
               {/* Role selection */}
               <div>
                 <label className="label">Select Role</label>
-                <select className="input" name="role" value={formData.role} onChange={handleChnage}>
+                <select className="input" name="role" value={formData.role} onChange={handleChange}>
                   <option value="Student">Student</option>
                   <option value="Teacher">Teacher</option>
                   <option value="Admin">Admin</option>
@@ -117,7 +118,7 @@ const LoginPage = () => {
               {/* Email Address */}
               <div>
                 <label className="lable">Email Address</label>
-                <input type="email" name="email" value={formData.email} onChange={handleChnage} className={`input ${errors.email ? "input-error" : ""}`} placeholder="Enter your email address"/>
+                <input type="email" name="email" value={formData.email} onChange={handleChange} className={`input ${errors.email ? "input-error" : ""}`} placeholder="Enter your email address"/>
                 {
                   errors.email && (
                     <p className="text-sm text-red-600 mt-1">{errors.email}</p>
@@ -128,7 +129,7 @@ const LoginPage = () => {
               {/* Password */}
               <div>
                 <label className="lable">Password</label>
-                <input type="password" name="password" value={formData.password} onChange={handleChnage} className={`input ${errors.password ? "input-error" : ""}`} placeholder="Enter your password"/>
+                <input type="password" name="password" value={formData.password} onChange={handleChange} className={`input ${errors.password ? "input-error" : ""}`} placeholder="Enter your password"/>
                 {
                   errors.password && (
                     <p className="text-sm text-red-600 mt-1">{errors.password}</p>
@@ -137,9 +138,9 @@ const LoginPage = () => {
               </div>
 
               {/* Forgot Password Link */}
-              <div className="text-right">
+              <div className="text-right my-4">
                 <Link to={`/forgot-password`} className="text-sm text-blue-600 hover:text-blue-500">
-                Forgotyour password?
+                Forgot your password?
                 </Link>
               </div>
 
